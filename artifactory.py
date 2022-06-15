@@ -267,7 +267,7 @@ def log_download_progress(bytes_now, total_size):
             round(bytes_now / total_size * 100, 2),
         )
     else:
-        msg = "Downloaded {}MB".format(int(bytes_now / 1024 / 1024))
+        msg = f"Downloaded {int(bytes_now / 1024 / 1024)}MB"
 
     logger.debug(msg)
 
@@ -2181,11 +2181,11 @@ class ArtifactoryPath(pathlib.Path, PureArtifactoryPath):
         aql_query_text = ""
         for arg in args:
             if isinstance(arg, dict):
-                arg = "({})".format(json.dumps(arg))
+                arg = f"({json.dumps(arg)})"
             elif isinstance(arg, list):
-                arg = "({})".format(json.dumps(arg)).replace("[", "").replace("]", "")
+                arg = f"({json.dumps(arg)})".replace("[", "").replace("]", "")
             elif isinstance(arg, int):
-                arg = "({})".format(arg)
+                arg = f"({arg})"
             aql_query_text += arg
 
         return aql_query_text

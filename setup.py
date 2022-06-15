@@ -35,7 +35,7 @@ setup(
     author="Alexey Burov",
     author_email="aburov@ptsecurity.com",
     classifiers=[
-        "Development Status :: {}".format(dev_status),
+        f"Development Status :: {dev_status}",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",

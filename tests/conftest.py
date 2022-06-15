@@ -38,7 +38,7 @@ def pytest_collection_modifyitems(items):
         elif module_root_dir.startswith("unit"):
             item.add_marker(pytest.mark.unit)
         else:
-            raise RuntimeError("Unknown test type (filename = {})".format(module_path))
+            raise RuntimeError(f"Unknown test type (filename = {module_path})")
 
 
 @pytest.fixture(scope="session")

@@ -558,7 +558,7 @@ class GenericRepository(AdminObject):
             "$or": [
                 {"name": {"$match": package}},
                 {"path": {"$match": package}},
-                {"@{}.name".format(self.package_type): {"$match": package}},
+                {f"@{self.package_type}.name": {"$match": package}},
                 {"@build.name": {"$match": package}},
                 {"artifact.module.build.name": {"$match": package}},
             ]
@@ -1061,7 +1061,7 @@ class PermissionTarget(AdminObject):
 
         for permission in permissions:
             if permission not in cls.ROLE_ADMIN:
-                raise ValueError("Unknown permission {name}".format(name=permission))
+                raise ValueError(f"Unknown permission {permission}")
         return permissions
 
     def add_user(self, name, permissions):
