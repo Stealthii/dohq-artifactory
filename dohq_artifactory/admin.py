@@ -592,15 +592,13 @@ class GenericRepository(AdminObject):
             yield self.path.from_aql(item)
 
     def __iter__(self):
-        for package in self.search():
-            yield package
+        yield from self.search()
 
     def __getitem__(self, key):
         terms = self._generate_query(key)
         sort = {"$desc": ["name", "created"]}
 
-        for item in self.search(terms=terms, sort=sort):
-            yield item
+        yield from self.search(terms=terms, sort=sort)
 
     def __getattr__(self, attr):
         return getattr(self.path, attr)

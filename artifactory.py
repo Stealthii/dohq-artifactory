@@ -1380,7 +1380,7 @@ class _ArtifactoryAccessor(pathlib._Accessor):
         raise_for_status(response)
 
     def scandir(self, pathobj):
-        return _ScandirIter((pathobj.joinpath(x) for x in self.listdir(pathobj)))
+        return _ScandirIter(pathobj.joinpath(x) for x in self.listdir(pathobj))
 
     def writeto(self, pathobj, file, chunk_size, progress_func):
         """
@@ -2706,7 +2706,6 @@ def walk(pathobj, topdown=True):
     if topdown:
         yield pathobj, dirs, nondirs
     for dir in dirs:
-        for result in walk(pathobj / dir):
-            yield result
+        yield from walk(pathobj / dir)
     if not topdown:
         yield pathobj, dirs, nondirs
