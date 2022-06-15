@@ -1,51 +1,54 @@
+from datetime import datetime
 import json
 import re
 import string
 import sys
 import time
+import typing as t
 import warnings
 
 import jwt
 from dateutil.parser import isoparse
+import requests
 
 from dohq_artifactory.exception import ArtifactoryException
 from dohq_artifactory.exception import raise_for_status
 from dohq_artifactory.logger import logger
 
 
-def rest_delay():
+def rest_delay() -> None:
     time.sleep(0.5)
 
 
-def generate_password(pw_len=16):
+def generate_password(pw_len: int = 16) -> str:
     import secrets
 
     return "".join(secrets.choice(string.ascii_letters) for i in range(pw_len))
 
 
-def deprecation(message):
+def deprecation(message: str) -> None:
     warnings.warn(message, DeprecationWarning, stacklevel=2)
 
 
 class AdminObject:
-    prefix_uri = "api"
-    _uri = None
-    resource_name = "name"
+    prefix_uri: str = "api"
+    _uri: t.Optional[str] = None
+    resource_name: str = "name"
 
-    def __init__(self, artifactory):
-        self.additional_params = {}
+    def __init__(self, artifactory) -> None:
+        self.additional_params: t.Dict = {}
         self.raw = None
-        self.name = None
+        self.name: t.Optional[str] = None
 
         self._artifactory = artifactory.top
         self.base_url = self._artifactory.drive
         self._auth = self._artifactory.auth
         self._session = self._artifactory.session
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<{self.__class__.__name__} {getattr(self, self.resource_name)}>"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return getattr(self, self.resource_name)
 
     def _create_json(self):
@@ -55,7 +58,7 @@ class AdminObject:
         """
         raise NotImplementedError()
 
-    def create(self):
+    def create(self) -> None:
         """
         Create object
         :return: None
@@ -65,7 +68,7 @@ class AdminObject:
         )
         self._create_and_update(self._session.put)
 
-    def _create_and_update(self, method):
+    def _create_and_update(self, method: t.Callable) -> None:
         """
         Create or update request, re-read object from Artifactory
         :return: None
@@ -83,7 +86,7 @@ class AdminObject:
         rest_delay()
         self.read()
 
-    def _read_response(self, response):
+    def _read_response(self, response: t.Dict) -> None:
         """
         Read response (JSON) and fill object
         :param response: JSON returned from Artifactory
@@ -91,7 +94,7 @@ class AdminObject:
         """
         raise NotImplementedError()
 
-    def read(self):
+    def read(self) -> bool:
         """
         Read object from artifactory. Fill object if exist
         :return:
@@ -118,7 +121,7 @@ class AdminObject:
             self._read_response(response)
             return True
 
-    def list(self):
+    def list(self) -> t.Union[t.List, str]:
         """
         List object from artifactory.
         :return:
@@ -138,7 +141,7 @@ class AdminObject:
             logger.debug(f"{self.__class__.__name__} [{self.name}] exist")
             return "failed"
 
-    def update(self):
+    def update(self) -> None:
         """
         Update object
         :return: None
@@ -148,7 +151,7 @@ class AdminObject:
         )
         self._create_and_update(self._session.post)
 
-    def delete(self):
+    def delete(self) -> None:
         """
         Remove object
         :return: None
@@ -166,34 +169,34 @@ class AdminObject:
 
 
 class User(AdminObject):
-    _uri = "security/users"
+    _uri: str = "security/users"
 
     def __init__(
         self,
         artifactory,
-        name,
-        email=None,
-        password=None,
-        disable_ui=False,
-        profile_updatable=True,
-        admin=False,
+        name: str,
+        email: t.Optional[str] = None,
+        password: t.Optional[str] = None,
+        disable_ui: bool = False,
+        profile_updatable: bool = True,
+        admin: bool = False,
     ):
         super().__init__(artifactory)
 
-        self.name = name
-        self.email = email
+        self.name: str = name
+        self.email: t.Optional[str] = email
 
-        self.password = password
-        self.admin = admin
-        self.profile_updatable = profile_updatable
-        self.disable_ui_access = disable_ui
-        self.internal_password_disabled = False
-        self._groups = []
+        self.password: t.Optional[str] = password
+        self.admin: bool = admin
+        self.profile_updatable: bool = profile_updatable
+        self.disable_ui_access: bool = disable_ui
+        self.internal_password_disabled: bool = False
+        self._groups: t.List[str] = []
 
-        self._last_logged_in = None
-        self._realm = None
+        self._last_logged_in: t.Optional[datetime] = None
+        self._realm: t.Optional[str] = None
 
-    def _create_json(self):
+    def _create_json(self) -> t.Dict:
         """
         JSON Documentation: https://www.jfrog.com/confluence/display/RTF/Security+Configuration+JSON
         """
@@ -209,17 +212,17 @@ class User(AdminObject):
         }
         return data_json
 
-    def _read_response(self, response):
+    def _read_response(self, response: t.Dict) -> None:
         """
         JSON Documentation: https://www.jfrog.com/confluence/display/RTF/Security+Configuration+JSON
         """
         # self.password = ''  # never returned
         self.name = response["name"]
         self.email = response.get("email")
-        self.admin = response.get("admin")
-        self.profile_updatable = response.get("profileUpdatable")
-        self.disable_ui_access = response.get("disableUIAccess")
-        self.internal_password_disabled = response.get("internalPasswordDisabled")
+        self.admin = response.get("admin", False)
+        self.profile_updatable = response.get("profileUpdatable", False)
+        self.disable_ui_access = response.get("disableUIAccess", False)
+        self.internal_password_disabled = response.get("internalPasswordDisabled", False)
         self._groups = response.get("groups", [])
         self._last_logged_in = (
             isoparse(response["lastLoggedIn"]) if response.get("lastLoggedIn") else None
@@ -227,7 +230,7 @@ class User(AdminObject):
         self._realm = response.get("realm")
 
     @property
-    def encryptedPassword(self):
+    def encryptedPassword(self) -> str:
         """
         Method for backwards compatibility, see property encrypted_password
         :return:
@@ -236,7 +239,7 @@ class User(AdminObject):
         return self.encrypted_password
 
     @property
-    def encrypted_password(self):
+    def encrypted_password(self) -> str:
         """
         Get the encrypted password of the authenticated requestor
         If you authenticate with an API key, the encrypted API key will be returned in the response.
@@ -248,7 +251,7 @@ class User(AdminObject):
 
         return encrypted_password
 
-    def _authenticated_user_request(self, api_url, request_type):
+    def _authenticated_user_request(self, api_url: str, request_type: t.Callable) -> str:
         """
         Send API request to artifactory to get user security parameters. auth should be provided
         :param api_url: querying API url
@@ -267,7 +270,7 @@ class User(AdminObject):
         return r.text
 
     @property
-    def lastLoggedIn(self):
+    def lastLoggedIn(self) -> t.Optional[datetime]:
         """
         Method for backwards compatibility, see property last_logged_in
         :return:
@@ -276,38 +279,44 @@ class User(AdminObject):
         return self.last_logged_in
 
     @property
-    def last_logged_in(self):
+    def last_logged_in(self) -> t.Optional[datetime]:
         return self._last_logged_in
 
     @property
-    def realm(self):
+    def realm(self) -> t.Optional[str]:
         return self._realm
 
-    def add_to_group(self, *groups):
+    def add_to_group(self, *groups: t.Union[Group, str]) -> None:
         for value in groups:
             if isinstance(value, Group):
-                value = value.name
-            self._groups.append(value)
+                self._groups.append(value.name)
+            elif isinstance(value, str):
+                self._groups.append(value)
+            else:
+                raise ValueError(f"{value} is not Group or str")
 
-    def remove_from_group(self, *groups):
+    def remove_from_group(self, *groups: t.Union[Group, str]) -> None:
         for value in groups:
             if isinstance(value, Group):
-                value = value.name
-            self._groups.remove(value)
+                self._groups.remove(value.name)
+            elif isinstance(value, str):
+                self._groups.remove(value)
+            else:
+                raise ValueError(f"{value} is not Group or str")
 
     @property
-    def groups(self):
+    def groups(self) -> t.List[Group]:
         return [self._artifactory.find_group(x) for x in self._groups]
 
     @groups.setter
-    def groups(self, value):
+    def groups(self, value: t.Union[t.List[str], str]) -> None:
         if not isinstance(value, list):
             value = list(value)
         self._groups = []
         self.add_to_group(*value)
 
     @groups.deleter
-    def groups(self):
+    def groups(self) -> None:
         self._groups = []
 
     @property
@@ -322,13 +331,13 @@ class User(AdminObject):
             self._user = user
             self.url = "/api/security/apiKey"
 
-        def __repr__(self):
+        def __repr__(self) -> str:
             return self.get() or ""
 
-        def __str__(self):
+        def __str__(self) -> str:
             return self.get() or ""
 
-        def get(self):
+        def get(self) -> str:
             """
             Get an API key for the current user
             :return: (str) API key
@@ -341,7 +350,7 @@ class User(AdminObject):
 
             return api_key
 
-        def create(self):
+        def create(self) -> str:
             """
             Create an API key for the current user.
             Returns an error if API key already exists - use api_key_regenerate to regenerate API key instead.
@@ -356,7 +365,7 @@ class User(AdminObject):
 
             return api_key
 
-        def regenerate(self):
+        def regenerate(self) -> str:
             """
             Regenerate an API key for the current user
             :return: (str) API key
@@ -376,7 +385,7 @@ class User(AdminObject):
 
             return api_key
 
-        def revoke(self):
+        def revoke(self) -> None:
             """
             Revokes the current user's API key
             :return: None
@@ -385,7 +394,7 @@ class User(AdminObject):
                 api_url=self.url, request_type=self._user._session.delete
             )
 
-        def revoke_for_all_users(self):
+        def revoke_for_all_users(self) -> None:
             """
             Revokes all API keys currently defined in the system
             Requires a privileged user (Admin only)
@@ -398,25 +407,25 @@ class User(AdminObject):
 
 
 class Group(AdminObject):
-    _uri = "security/groups"
-    _uri_deletion = "security/groups"
+    _uri: str = "security/groups"
+    _uri_deletion: str = "security/groups"
 
     def __init__(self, artifactory, name):
         super().__init__(artifactory)
 
         self.name = name
-        self.description = ""
-        self.external = False
-        self.auto_join = False
-        self.realm = "artifactory"
-        self.new_user_default = False
+        self.description: str = ""
+        self.external: bool = False
+        self.auto_join: bool = False
+        self.realm: str = "artifactory"
+        self.new_user_default: bool = False
         self.realm_attributes = None
         self.users = None
 
         # Deprecated
         self.auto_join = self.new_user_default
 
-    def _create_json(self):
+    def _create_json(self) -> t.Dict:
         """
         JSON Documentation: https://www.jfrog.com/confluence/display/RTF/Security+Configuration+JSON
         """
@@ -430,7 +439,7 @@ class Group(AdminObject):
         }
 
         if isinstance(self.users, list):
-            data_json.update({"usersInGroup": self.users})
+            data_json["usersInGroup"] = self.users
 
         return data_json
 
@@ -447,7 +456,7 @@ class Group(AdminObject):
         self.new_user_default = response.get("newUserDefault")
         self.users = response.get("usersInGroup")
 
-    def delete(self):
+    def delete(self) -> None:
         """
         Remove object
         :return: None
@@ -462,7 +471,7 @@ class Group(AdminObject):
         r.raise_for_status()
         rest_delay()
 
-    def create(self):
+    def create(self) -> None:
         """
         Create object
         :return: None
@@ -485,11 +494,10 @@ class Group(AdminObject):
 
 
 class GroupLDAP(Group):
-    def __init__(self, artifactory, name, realm_attributes=None):
+    def __init__(self, artifactory, name: str, realm_attributes=None):
         # Must be lower case: https://www.jfrog.com/confluence/display/RTF/LDAP+Groups#LDAPGroups-UsingtheRESTAPI
-        name = name.lower()
-        super().__init__(artifactory, name)
-        self.realm = "ldap"
+        super().__init__(artifactory=artifactory, name=name.lower())
+        self.realm: str = "ldap"
         self.realm_attributes = realm_attributes
 
     def _create_json(self):
