@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 from dohq_artifactory.admin import Group
 from dohq_artifactory.admin import PermissionTarget
 from dohq_artifactory.admin import Project
