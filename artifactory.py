@@ -272,7 +272,7 @@ def log_download_progress(bytes_now, total_size):
     logger.debug(msg)
 
 
-class HTTPResponseWrapper(object):
+class HTTPResponseWrapper:
     """
     This class is intended as a workaround for 'requests' module
     inability to consume HTTPResponse as a streaming upload source.
@@ -433,11 +433,11 @@ class _ArtifactoryFlavour(pathlib._Flavour):
         return re.compile(fnmatch.translate(pattern), re.IGNORECASE).fullmatch
 
     def parse_parts(self, parts):
-        drv, root, parsed = super(_ArtifactoryFlavour, self).parse_parts(parts)
+        drv, root, parsed = super().parse_parts(parts)
         return drv, root, parsed
 
     def join_parsed_parts(self, drv, root, parts, drv2, root2, parts2):
-        drv2, root2, parts2 = super(_ArtifactoryFlavour, self).join_parsed_parts(
+        drv2, root2, parts2 = super().join_parsed_parts(
             drv, root, parts, drv2, root2, parts2
         )
 
@@ -1434,7 +1434,7 @@ class PureArtifactoryPath(pathlib.PurePath):
     __slots__ = ()
 
 
-class _FakePathTemplate(object):
+class _FakePathTemplate:
     def __init__(self, accessor):
         self._accessor = accessor
 
@@ -1517,7 +1517,7 @@ class ArtifactoryPath(pathlib.Path, PureArtifactoryPath):
         if "template" not in kwargs:
             kwargs["template"] = _FakePathTemplate(_artifactory_accessor)
 
-        super(ArtifactoryPath, self)._init(*args, **kwargs)
+        super()._init(*args, **kwargs)
 
     @property
     def top(self):
@@ -1534,7 +1534,7 @@ class ArtifactoryPath(pathlib.Path, PureArtifactoryPath):
         """
         The logical parent of the path.
         """
-        obj = super(ArtifactoryPath, self).parent
+        obj = super().parent
         obj.auth = self.auth
         obj.verify = self.verify
         obj.cert = self.cert
@@ -1596,7 +1596,7 @@ class ArtifactoryPath(pathlib.Path, PureArtifactoryPath):
         """
         Return a new path with the file name changed.
         """
-        obj = super(ArtifactoryPath, self).with_name(name)
+        obj = super().with_name(name)
         obj.auth = self.auth
         obj.verify = self.verify
         obj.cert = self.cert
@@ -1608,7 +1608,7 @@ class ArtifactoryPath(pathlib.Path, PureArtifactoryPath):
         """
         Return a new path with the file suffix changed (or added, if none).
         """
-        obj = super(ArtifactoryPath, self).with_suffix(suffix)
+        obj = super().with_suffix(suffix)
         obj.auth = self.auth
         obj.verify = self.verify
         obj.cert = self.cert
@@ -1647,7 +1647,7 @@ class ArtifactoryPath(pathlib.Path, PureArtifactoryPath):
         arguments.  If the operation is not possible (because this is not
         a subpath of the other path), raise ValueError.
         """
-        obj = super(ArtifactoryPath, self).relative_to(*other)
+        obj = super().relative_to(*other)
         obj.auth = self.auth
         obj.verify = self.verify
         obj.cert = self.cert
@@ -1662,7 +1662,7 @@ class ArtifactoryPath(pathlib.Path, PureArtifactoryPath):
         paths) or a totally different path (if one of the arguments is
         anchored).
         """
-        obj = super(ArtifactoryPath, self).joinpath(*args)
+        obj = super().joinpath(*args)
         obj.auth = self.auth
         obj.verify = self.verify
         obj.cert = self.cert
@@ -1674,7 +1674,7 @@ class ArtifactoryPath(pathlib.Path, PureArtifactoryPath):
         """
         Join two paths with '/'
         """
-        obj = super(ArtifactoryPath, self).__truediv__(key)
+        obj = super().__truediv__(key)
         obj.auth = self.auth
         obj.verify = self.verify
         obj.cert = self.cert
@@ -1686,7 +1686,7 @@ class ArtifactoryPath(pathlib.Path, PureArtifactoryPath):
         """
         Join two paths with '/'
         """
-        obj = super(ArtifactoryPath, self).__truediv__(key)
+        obj = super().__truediv__(key)
         obj.auth = self.auth
         obj.verify = self.verify
         obj.cert = self.cert
@@ -1699,7 +1699,7 @@ class ArtifactoryPath(pathlib.Path, PureArtifactoryPath):
         __rdiv__ = __rtruediv__
 
     def _make_child(self, args):
-        obj = super(ArtifactoryPath, self)._make_child(args)
+        obj = super()._make_child(args)
         obj.auth = self.auth
         obj.verify = self.verify
         obj.cert = self.cert
@@ -1708,7 +1708,7 @@ class ArtifactoryPath(pathlib.Path, PureArtifactoryPath):
         return obj
 
     def _make_child_relpath(self, args):
-        obj = super(ArtifactoryPath, self)._make_child_relpath(args)
+        obj = super()._make_child_relpath(args)
         obj.auth = self.auth
         obj.verify = self.verify
         obj.cert = self.cert

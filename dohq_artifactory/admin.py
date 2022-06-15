@@ -61,7 +61,7 @@ def deprecation(message):
     warnings.warn(message, DeprecationWarning, stacklevel=2)
 
 
-class AdminObject(object):
+class AdminObject:
     prefix_uri = "api"
     _uri = None
     resource_name = "name"
@@ -212,7 +212,7 @@ class User(AdminObject):
         profile_updatable=True,
         admin=False,
     ):
-        super(User, self).__init__(artifactory)
+        super().__init__(artifactory)
 
         self.name = name
         self.email = email
@@ -436,7 +436,7 @@ class Group(AdminObject):
     _uri_deletion = "security/groups"
 
     def __init__(self, artifactory, name):
-        super(Group, self).__init__(artifactory)
+        super().__init__(artifactory)
 
         self.name = name
         self.description = ""
@@ -522,7 +522,7 @@ class GroupLDAP(Group):
     def __init__(self, artifactory, name, realm_attributes=None):
         # Must be lower case: https://www.jfrog.com/confluence/display/RTF/LDAP+Groups#LDAPGroups-UsingtheRESTAPI
         name = name.lower()
-        super(GroupLDAP, self).__init__(artifactory, name)
+        super().__init__(artifactory, name)
         self.realm = "ldap"
         self.realm_attributes = realm_attributes
 
@@ -530,7 +530,7 @@ class GroupLDAP(Group):
         """
         JSON Documentation: https://www.jfrog.com/confluence/display/RTF/Security+Configuration+JSON
         """
-        data_json = super(GroupLDAP, self)._create_json()
+        data_json = super()._create_json()
         data_json.update({"realmAttributes": self.realm_attributes, "external": True})
         return data_json
 
@@ -739,7 +739,7 @@ class RepositoryLocal(Repository):
         dockerApiVersion=None,
         repoLayoutRef=None,
     ):
-        super(RepositoryLocal, self).__init__(artifactory)
+        super().__init__(artifactory)
         self.name = name
         self.description = ""
         self.package_type = packageType or package_type
@@ -841,7 +841,7 @@ class RepositoryVirtual(GenericRepository):
         *,
         packageType=None,
     ):
-        super(RepositoryVirtual, self).__init__(artifactory)
+        super().__init__(artifactory)
         self.name = name
         self.description = ""
         self.notes = ""
@@ -937,7 +937,7 @@ class RepositoryRemote(Repository):
         dockerApiVersion=None,
         repoLayoutRef=None,
     ):
-        super(RepositoryRemote, self).__init__(artifactory)
+        super().__init__(artifactory)
         self.name = name
         self.description = ""
         self.package_type = packageType or package_type
@@ -1027,7 +1027,7 @@ class PermissionTarget(AdminObject):
     ROLE_READ = READ
 
     def __init__(self, artifactory, name, repositories=None, users=None, groups=None):
-        super(PermissionTarget, self).__init__(artifactory)
+        super().__init__(artifactory)
         self.name = name
         self.includesPattern = "**"
         self.excludesPattern = ""
@@ -1203,7 +1203,7 @@ class Token(AdminObject):
     ):
         from collections import defaultdict
 
-        super(Token, self).__init__(artifactory)
+        super().__init__(artifactory)
 
         # TODO: Communicate that for creation and stuff
         # username or scope is necessary
